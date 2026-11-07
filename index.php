@@ -1,6 +1,4 @@
-```php
 <?php
-
 ob_start();
 
 // Start session before database connection and HTML
@@ -30,7 +28,6 @@ $recent = $conn->query(
 
 // Include header
 require 'header.php';
-
 ?>
 
 <section class="welcome-banner">
@@ -153,4 +150,3 @@ require 'header.php';
 </section>
 
 <?php require 'footer.php'; ?>
-```
