@@ -1,9 +1,9 @@
 ```php
 <?php
-
-// Start output buffering and session first
+// Start output buffering
 ob_start();
 
+// Start session before any output
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -67,7 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 require 'header.php';
-
 ?>
 
 <div class="page-intro">
