@@ -1,1 +1,2 @@
-db.php
+# Ignore local secrets
+.env
