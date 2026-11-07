@@ -1,7 +1,7 @@
 ```php
 <?php
+ob_start();
 
-// Start session before any output
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
