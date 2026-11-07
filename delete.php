@@ -1,4 +1,3 @@
-
 <?php
 // Start output buffering
 ob_start();
