@@ -38,7 +38,6 @@ require 'header.php';
         <p>Manage student information, registrations and academic records from one place.</p>
         <a href="add.php" class="btn btn-light">+ Register New Student</a>
     </div>
-
     <div class="banner-decoration">S</div>
 </section>
 
@@ -48,7 +47,6 @@ require 'header.php';
         <h2>Dashboard Overview</h2>
         <p>Here's what's happening with your student records.</p>
     </div>
-
     <span class="date-label"><?= date('d M Y') ?></span>
 </div>
 
@@ -116,21 +114,9 @@ require 'header.php';
 
                         <tr>
                             <td>#<?= htmlspecialchars((string)$row['id']) ?></td>
-
-                            <td>
-                                <strong>
-                                    <?= htmlspecialchars($row['name']) ?>
-                                </strong>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars($row['email']) ?>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars((string)$row['age']) ?>
-                            </td>
-
+                            <td><strong><?= htmlspecialchars($row['name']) ?></strong></td>
+                            <td><?= htmlspecialchars($row['email']) ?></td>
+                            <td><?= htmlspecialchars((string)$row['age']) ?></td>
                             <td>
                                 <span class="course-badge">
                                     <?= htmlspecialchars($row['course']) ?>

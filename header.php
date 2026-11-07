@@ -1,20 +1,11 @@
 ```php
 <?php
 
-// Start session before any HTML output
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Generate CSRF token
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-
 // Get current page
 $page = basename($_SERVER['PHP_SELF']);
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,6 +16,7 @@ $page = basename($_SERVER['PHP_SELF']);
 
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <header class="site-header">
