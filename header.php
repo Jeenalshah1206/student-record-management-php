@@ -1,4 +1,3 @@
-```php
 <?php
 // Get current page
 $page = basename($_SERVER['PHP_SELF']);
