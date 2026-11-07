@@ -1,24 +1,46 @@
 <?php
 ob_start();
 
-// Start session first
+// Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
+}
+// Generate CSRF token
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 // Database connection
 require_once 'db.php';
 
-$pageTitle = 'View Students | StudentHub';
+$pageTitle = 'Student Records | StudentHub';
 
-// Handle delete or success messages if any
-$added = $_GET['added'] ?? 0;
+$search = trim($_GET['search'] ?? '');
 
-// Fetch all students from database
-$result = $conn->query("SELECT * FROM students ORDER BY id DESC");
+$stmt = $conn->prepare(
+    "SELECT * FROM students
+     WHERE name LIKE ?
+     OR email LIKE ?
+     OR course LIKE ?
+     OR CAST(id AS CHAR) LIKE ?
+     ORDER BY id DESC"
+);
 
-// Include header
+if (!$stmt) {
+    error_log("Search query failed: " . $conn->error);
+    die("Unable to load student records. Please try again.");
+}
+
+$term = "%$search%";
+
+$stmt->bind_param("ssss", $term, $term, $term, $term);
+$stmt->execute();
+
+$result = $stmt->get_result();
+$count = $result->num_rows;
+
 require 'header.php';
+
 ?>
 
 <div class="page-intro">
@@ -27,54 +49,151 @@ require 'header.php';
     <p>View, search and manage all registered student information.</p>
 </div>
 
-<?php if ($added): ?>
-    <div class="alert alert-success" style="margin-bottom: 20px; padding: 10px; background: #d4edda; color: #155724; border-radius: 4px;">
-        Student successfully registered!
-    </div>
-<?php endif; ?>
+<section class="content-panel">
 
-<section class="form-panel">
-    <div class="form-panel-heading">
+    <?php if (isset($_GET['added'])): ?>
+        <div class="alert alert-success">
+            ✓ Student registered successfully!
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['deleted'])): ?>
+        <div class="alert alert-success">
+            ✓ Student record deleted successfully!
+        </div>
+    <?php endif; ?>
+
+    <div class="directory-toolbar">
+
         <div>
             <h2>All Students</h2>
-            <p><?php echo $result->num_rows; ?> matching record(s)</p>
+            <p><?= $count ?> matching record(s)</p>
         </div>
+
+        <div class="toolbar-actions">
+
+            <form method="GET" class="search-box">
+
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="Search name, email, ID..."
+                    value="<?= htmlspecialchars($search) ?>"
+                >
+
+                <button type="submit">Search</button>
+
+            </form>
+
+            <a href="add.php" class="btn btn-primary">
+                + Add Student
+            </a>
+
+        </div>
+
     </div>
 
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+    <div class="table-scroll">
+
+        <table>
+
             <thead>
-                <tr style="border-bottom: 2px solid #ddd; text-align: left;">
-                    <th style="padding: 12px;">ID</th>
-                    <th style="padding: 12px;">STUDENT NAME</th>
-                    <th style="padding: 12px;">EMAIL</th>
-                    <th style="padding: 12px;">AGE</th>
-                    <th style="padding: 12px;">COURSE</th>
+                <tr>
+                    <th>ID</th>
+                    <th>Student Name</th>
+                    <th>Email</th>
+                    <th>Age</th>
+                    <th>Course</th>
+                    <th>Action</th>
                 </tr>
             </thead>
+
             <tbody>
-                <?php if ($result && $result->num_rows > 0): ?>
+
+                <?php if ($count > 0): ?>
+
                     <?php while ($row = $result->fetch_assoc()): ?>
-                        <tr style="border-bottom: 1px solid #eee;">
-                            <td style="padding: 12px;">#<?php echo htmlspecialchars($row['id']); ?></td>
-                            <td style="padding: 12px; font-weight: bold;"><?php echo htmlspecialchars($row['name']); ?></td>
-                            <td style="padding: 12px;"><?php echo htmlspecialchars($row['email']); ?></td>
-                            <td style="padding: 12px;"><?php echo htmlspecialchars($row['age']); ?></td>
-                            <td style="padding: 12px;">
-                                <span style="background: #e2f0cb; padding: 4px 8px; border-radius: 4px; font-size: 0.9em;">
-                                    <?php echo htmlspecialchars($row['course']); ?>
+
+                        <tr>
+
+                            <td>
+                                #<?= htmlspecialchars((string)$row['id']) ?>
+                            </td>
+
+                            <td>
+                                <strong>
+                                    <?= htmlspecialchars($row['name']) ?>
+                                </strong>
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars($row['email']) ?>
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars((string)$row['age']) ?>
+                            </td>
+
+                            <td>
+                                <span class="course-badge">
+                                    <?= htmlspecialchars($row['course']) ?>
                                 </span>
                             </td>
+
+                            <td>
+
+                                <form
+                                    method="POST"
+                                    action="delete.php"
+                                    onsubmit="return confirm('Permanently delete this student?');"
+                                >
+
+                                    <input
+                                        type="hidden"
+                                        name="csrf_token"
+                                        value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>"
+                                    >
+
+                                    <input
+                                        type="hidden"
+                                        name="id"
+                                        value="<?= htmlspecialchars((string)$row['id']) ?>"
+                                    >
+
+                                    <button type="submit" class="table-delete">
+                                        Delete
+                                    </button>
+
+                                </form>
+
+                            </td>
+
                         </tr>
+
                     <?php endwhile; ?>
+
                 <?php else: ?>
+
                     <tr>
-                        <td colspan="5" style="padding: 20px; text-align: center; color: #777;">No student records found.</td>
+                        <td colspan="6" class="empty-state">
+                            No matching student records found.
+                        </td>
                     </tr>
+
                 <?php endif; ?>
+
             </tbody>
+
         </table>
+
     </div>
+
 </section>
 
-<?php require 'footer.php'; ?>
+<?php
+
+$stmt->close();
+
+require 'footer.php';
+
+?>
