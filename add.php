@@ -1,27 +1,35 @@
-
+```php
 <?php
-require_once 'db.php';
 
 ob_start();
 
+// Start session first
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// Generate CSRF token
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
+// Database connection
+require_once 'db.php';
+
 $pageTitle = 'Add Student | StudentHub';
 $error = '';
 
+// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // CSRF validation
     if (!hash_equals(
-        $_SESSION['csrf_token'] ?? '',
+        $_SESSION['csrf_token'],
         $_POST['csrf_token'] ?? ''
     )) {
+
         $error = "Invalid request. Please refresh and try again.";
+
     } else {
 
         // Get form data
@@ -40,9 +48,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $age > 120 ||
             $course === ''
         ) {
+
             $error = "Please enter valid information in all fields.";
 
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
             $error = "Please enter a valid email address.";
 
         } else {
@@ -54,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
 
             if ($stmt) {
+
                 $stmt->bind_param(
                     "ssis",
                     $name,
@@ -63,24 +74,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
 
                 if ($stmt->execute()) {
+
                     $stmt->close();
 
                     header("Location: view.php?added=1");
                     exit;
+
                 } else {
+
+                    error_log("Student insertion failed: " . $stmt->error);
                     $error = "Unable to register student. Please try again.";
                 }
 
                 $stmt->close();
 
             } else {
+
+                error_log("Student query preparation failed: " . $conn->error);
                 $error = "Database query failed. Please try again.";
             }
         }
     }
 }
 
+// Include header
 require 'header.php';
+
 ?>
 
 <div class="page-intro">
@@ -201,3 +220,4 @@ require 'header.php';
 </section>
 
 <?php require 'footer.php'; ?>
+```

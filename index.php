@@ -1,7 +1,9 @@
 ```php
 <?php
+
 ob_start();
 
+// Start session before database connection and HTML
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -114,9 +116,17 @@ require 'header.php';
 
                         <tr>
                             <td>#<?= htmlspecialchars((string)$row['id']) ?></td>
-                            <td><strong><?= htmlspecialchars($row['name']) ?></strong></td>
+
+                            <td>
+                                <strong>
+                                    <?= htmlspecialchars($row['name']) ?>
+                                </strong>
+                            </td>
+
                             <td><?= htmlspecialchars($row['email']) ?></td>
+
                             <td><?= htmlspecialchars((string)$row['age']) ?></td>
+
                             <td>
                                 <span class="course-badge">
                                     <?= htmlspecialchars($row['course']) ?>
